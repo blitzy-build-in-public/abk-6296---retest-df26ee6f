@@ -73,8 +73,8 @@ function readPort(raw) {
  * @returns {never} Never returns; the process exits with status 1.
  */
 function failInvalidPort(value) {
-  process.stderr.write(
-    `Invalid PORT value "${value}": PORT must be an integer between 1024 and 65535.\n`
+  console.error(
+    `Invalid PORT value "${value}": PORT must be an integer between 1024 and 65535.`
   );
   process.exit(1);
 }
@@ -208,17 +208,17 @@ server.on('connection', (socket) => {
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    process.stderr.write(
+    console.error(
       `Failed to start: port ${port} is already in use. Stop the process using it, ` +
-        `or choose another port, for example: PORT=${port + 1} node server.js\n`
+        `or choose another port, for example: PORT=${port + 1} node server.js`
     );
   } else if (err.code === 'EACCES') {
-    process.stderr.write(
+    console.error(
       `Failed to start: permission denied binding to port ${port}. ` +
-        `Choose a port between 1024 and 65535.\n`
+        `Choose a port between 1024 and 65535.`
     );
   } else {
-    process.stderr.write(`Failed to start: could not listen on port ${port} (${err.code}).\n`);
+    console.error(`Failed to start: could not listen on port ${port} (${err.code}).`);
   }
 
   process.exit(1);
@@ -229,12 +229,26 @@ server.listen(port, () => {
 });
 
 /**
+ * Whether the shutdown sequence has already been started.
+ *
+ * A repeated Ctrl+C re-enters the handler, so this flag keeps the sequence to
+ * one run per process: the first delivery claims it and later ones return.
+ *
+ * @type {boolean}
+ */
+let shuttingDown = false;
+
+/**
  * Stop on Ctrl+C: refuse new connections, drop the open ones, log the stop.
  *
+ * The sequence runs once per process, so a repeated signal changes nothing.
  * The exit status is set rather than forced, so the final log line is flushed
  * and the process ends by itself once the event loop drains.
  */
 process.on('SIGINT', () => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
   process.exitCode = 0;
   console.log('Server shutting down');
 
