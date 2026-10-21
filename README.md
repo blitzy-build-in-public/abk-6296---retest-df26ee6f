@@ -20,7 +20,7 @@ It is a tutorial reference implementation — the smallest complete demonstratio
 
 ## Installation
 
-There is no installation step. The project declares **zero dependencies** — `package.json` has no `dependencies` and no `devDependencies` — so nothing has to be downloaded, compiled or configured, and no `node_modules` directory ever appears. `npm install` is not required; running it is a harmless no-op.
+There is no installation step. The project declares **zero dependencies** — `package.json` has no `dependencies` and no `devDependencies` — so nothing has to be downloaded, compiled or configured, and no `node_modules` directory ever appears. `npm install` is not required: it installs nothing, though npm still writes a generated `package-lock.json` into the project root, which you can delete.
 
 Clone or download the three files of the project, then change into the directory that contains them. The example below uses the project name as the directory name:
 
@@ -159,7 +159,7 @@ The listening port comes from the `PORT` environment variable.
 | Setting | Meaning |
 | --- | --- |
 | unset | default `3000` |
-| empty (`PORT=`) | also `3000` — an empty value counts as "not set" |
+| empty or whitespace-only (`PORT=`, `PORT=' '`) | also `3000` — an empty or whitespace-only value counts as "not set" |
 | `1024` to `65535` | accepted; the server listens on that port |
 | anything else | rejected before the server binds (see [Startup failures](#startup-failures)) |
 
@@ -181,13 +181,13 @@ PORT=3001 npm start
 
 Then test the new port with `curl http://localhost:3001/hello`.
 
-The accepted range is a whole number from `1024` to `65535`. A value below `1024` is refused by the server's own validation before it binds, so a privileged port is never used; the same applies to a value above `65535` and to anything that is not a whole number.
+The accepted range is a whole number from `1024` to `65535`. A value below `1024` is refused by the server's own validation before it binds, so a privileged port is never used; the same applies to a value above `65535` and to anything else that is not a whole number. Only a blank value — empty, or nothing but whitespace — counts as "not set"; `PORT='3000 '` is not blank, so it is rejected like any other value that is not a whole number.
 
 ## Startup failures
 
 Both startup failures print a single plain sentence to standard error and exit with status `1` — no stack trace and no internal detail.
 
-**An unusable `PORT`.** Any value that is not a whole number in `1024`-`65535` is rejected, for instance `PORT=abc`, `PORT=80`, `PORT=1023`, `PORT=0`, `PORT=3000.5`, `PORT=65536`, `PORT=+3000` or `PORT=1.0e3`:
+**An unusable `PORT`.** Any non-blank value that is not a whole number in `1024`-`65535` is rejected, for instance `PORT=abc`, `PORT=80`, `PORT=1023`, `PORT=0`, `PORT=3000.5`, `PORT=65536`, `PORT=+3000` or `PORT=1.0e3`:
 
 ```bash
 PORT=abc node server.js
