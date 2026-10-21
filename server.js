@@ -15,7 +15,7 @@
 
 const http = require('node:http');
 
-/** Port used when the PORT environment variable is unset or empty. */
+/** Port used when PORT is unset, empty or whitespace-only. */
 const DEFAULT_PORT = 3000;
 
 /** Lowest accepted port: ports below this are privileged on most platforms. */
@@ -206,6 +206,14 @@ server.on('connection', (socket) => {
   });
 });
 
+/**
+ * Report a failure to bind the listening port and stop the process.
+ *
+ * Each branch writes one fixed, actionable sentence to stderr — naming the
+ * port, and the error's `code` in the catch-all branch — and then exits with
+ * status 1. `err` is inspected only to select that sentence: no stack trace,
+ * no error object and no configuration value beyond the port is printed.
+ */
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     console.error(
