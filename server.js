@@ -216,9 +216,13 @@ server.on('connection', (socket) => {
  */
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
+    // The example must stay inside the range `readPort` accepts, so at the top
+    // of that range it steps back instead of naming a port this server rejects.
+    const suggestion = port < MAX_PORT ? port + 1 : MAX_PORT - 1;
+
     console.error(
       `Failed to start: port ${port} is already in use. Stop the process using it, ` +
-        `or choose another port, for example: PORT=${port + 1} node server.js`
+        `or choose another port, for example: PORT=${suggestion} node server.js`
     );
   } else if (err.code === 'EACCES') {
     console.error(
